@@ -3,13 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 
 
 class UserManager(BaseUserManager):
-    """
-    Custom user model manager where email is the unique identifiers for authentication instead of usernames.
-    """
     def create_user(self, email, password, **extra_fields) -> 'User':
-        """
-        Create and save a User with the given email and password.
-        """
         if not email:
             raise ValueError('The given email must be set')
         user = self.model(user_email=self.normalize_email(email), **extra_fields)
@@ -17,11 +11,15 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    def create_superuser(self, user_email, user_password) -> 'User':
+        user = self.create_user(user_email, user_password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
+
 
 class User(AbstractBaseUser, PermissionsMixin):
-    """
-    Custom user model where email is the unique identifiers for authentication instead of usernames.
-    """
     user_email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
